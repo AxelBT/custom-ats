@@ -1,0 +1,94 @@
+:root {
+    --ink: #1a1d24;
+    --paper: #f4f5f7;
+    --surface: #ffffff;
+    --accent: #d17b2c;
+    --accent-strong: #a85f18;
+    --muted: #62697a;
+    --line: #e2e5ea;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.6;
+}
+
+#app {
+    max-width: 440px;
+    margin: 64px auto;
+    padding: 32px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+h1 {
+    font-size: 1.5rem;
+}
+
+label[for="secteur-select"] {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: -8px;
+}
+
+.dropzone {
+    display: block;
+    text-align: center;
+    padding: 24px;
+    border: 1.5px dashed var(--line);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+}
+.dropzone:hover { border-color: var(--accent); color: var(--accent-strong); }
+.dropzone .filename { color: var(--accent-strong); font-weight: 500; }
+
+select {
+    width: 100%;
+    padding: 11px 13px;
+    font: inherit;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.custom-link {
+    font-size: 0.9rem;
+    color: var(--accent-strong);
+}
+
+button {
+    padding: 13px;
+    font: inherit;
+    font-weight: 500;
+    color: var(--ink);
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+button:hover:not(:disabled) { background: #e68c38; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.status {
+    font-size: 0.9rem;
+    padding: 10px 12px;
+    background: #ecf6ef;
+    color: #2c6b47;
+    border-radius: 8px;
+}
+
+select:focus, button:focus-visible, .dropzone:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}

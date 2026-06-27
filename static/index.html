@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évaluateur de CV</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+    <main id="app" v-cloak>
+        <h1>Évaluer un CV</h1>
+
+        <label class="dropzone">
+            <input type="file" accept=".pdf" @change="onFile" hidden>
+            <span v-if="!file">Choisir un CV (PDF)</span>
+            <span v-else class="filename">{{ file.name }}</span>
+        </label>
+
+        <label for="secteur-select">Secteur d'activité</label>
+        <select name="secteur" id="secteur-select" v-model="secteur">
+            <option value="Développement Fullstack">Développement Fullstack</option>
+            <option value="Actuariat">Actuariat</option>
+            <option value="Finance">Finance</option>
+        </select>
+
+        <a href="/custom-prompt" class="custom-link">Utiliser une requête personnalisée</a>
+
+        <button @click="submit" :disabled="!file || loading">
+            {{ loading ? 'Évaluation en cours…' : 'Évaluer' }}
+        </button>
+
+        <p v-if="status" class="status">{{ status }}</p>
+    </main>
+    <script src="index.js"></script>
+</body>
+</html>
