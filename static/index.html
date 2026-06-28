@@ -9,28 +9,88 @@
 </head>
 <body>
     <main id="app" v-cloak>
-        <h1>Évaluer un CV</h1>
 
-        <label class="dropzone">
-            <input type="file" accept=".pdf" @change="onFile" hidden>
-            <span v-if="!file">Choisir un CV (PDF)</span>
-            <span v-else class="filename">{{ file.name }}</span>
-        </label>
+        <!-- VUE FORMULAIRE -->
+        <section class="card" v-if="!result">
+            <h1>Évaluer un CV</h1>
 
-        <label for="secteur-select">Secteur d'activité</label>
-        <select name="secteur" id="secteur-select" v-model="secteur">
-            <option value="Développement Fullstack">Développement Fullstack</option>
-            <option value="Actuariat">Actuariat</option>
-            <option value="Finance">Finance</option>
-        </select>
+            <label class="dropzone">
+                <input type="file" accept=".pdf" @change="onFile" hidden>
+                <span v-if="!file">Choisir un CV (PDF)</span>
+                <span v-else class="filename">{{ file.name }}</span>
+            </label>
 
-        <a href="/custom-prompt" class="custom-link">Utiliser une requête personnalisée</a>
+            <label for="secteur-select">Secteur d'activité</label>
+            <select id="secteur-select" v-model="secteur">
+                <option value="Développement Fullstack">Développement Fullstack</option>
+                <option value="Actuariat">Actuariat</option>
+                <option value="Finance">Finance</option>
+            </select>
 
-        <button @click="submit" :disabled="!file || loading">
-            {{ loading ? 'Évaluation en cours…' : 'Évaluer' }}
-        </button>
+            <a href="/custom-prompt" class="custom-link">Utiliser une requête personnalisée</a>
 
-        <p v-if="status" class="status">{{ status }}</p>
+            <button @click="submit" :disabled="!file || loading">
+                {{ loading ? 'Évaluation en cours…' : 'Évaluer' }}
+            </button>
+
+            <p v-if="status" class="status">{{ status }}</p>
+        </section>
+
+        <!-- VUE RÉSULTAT -->
+       <section class="result" v-if="result">
+    <p class="result-eyebrow">Résultat de l'analyse</p>
+
+    <div class="total">
+        <div class="total-num">{{ round1(total) }}<span class="total-max">/ {{ maxTotal }}</span></div>
+        <div class="total-scale">
+            <div class="gauge">
+                <div class="gauge-fill" :style="{ width: gaugePct + '%' }"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="breakdown">
+        <div class="score-card" v-for="(cat, key) in result.scores" :key="key">
+            <div class="cat-head">
+                <span class="cat">{{ key }}</span>
+                <span class="pts">{{ round1(cat.score) }} / {{ cat.max }}</span>
+            </div>
+            <div class="mini-gauge">
+                <div class="mini-fill" :style="{ width: pct(cat) + '%' }"></div>
+            </div>
+            <p class="evidence">{{ cat.evidence }}</p>
+        </div>
+    </div>
+
+    <div class="adjustments">
+        <div class="adj">
+            <span class="chip chip-bonus">bonus_points · +{{ round1(result.bonus_points.total) }}</span>
+            <p class="reason" v-if="result.bonus_points.breakdown">{{ result.bonus_points.breakdown }}</p>
+        </div>
+        <div class="adj">
+            <span class="chip chip-deduct">deductions · −{{ round1(result.deductions.total) }}</span>
+            <p class="reason" v-if="result.deductions.reasons">{{ result.deductions.reasons }}</p>
+        </div>
+    </div>
+
+    <div class="lists">
+        <div class="list-block">
+            <h3>key_strengths</h3>
+            <ul class="good">
+                <li v-for="(s, i) in result.key_strengths" :key="i">{{ s }}</li>
+            </ul>
+        </div>
+        <div class="list-block">
+            <h3>areas_for_improvement</h3>
+            <ul class="warn">
+                <li v-for="(a, i) in result.areas_for_improvement" :key="i">{{ a }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <button class="secondary-btn" @click="reset">Évaluer un autre CV</button>
+</section>
+
     </main>
     <script src="index.js"></script>
 </body>

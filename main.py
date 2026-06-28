@@ -1,26 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 import os
-import sys
-import json
 import logging
-import csv
+import tempfile
 from pdf import PDFHandler
 from github import fetch_and_display_github_info
-from models import JSONResume, EvaluationData
-from typing import List, Optional, Dict
-from evaluator import ResumeEvaluator
-from pathlib import Path
-from prompt import DEFAULT_MODEL, MODEL_PARAMETERS
-from transform import (
-    transform_evaluation_response,
-    convert_json_resume_to_text,
-    convert_github_data_to_text,
-    convert_blog_data_to_text,
-)
-from config import DEVELOPMENT_MODE
+from score import find_profile, _evaluate_resume
 
 logger = logging.getLogger(__name__)
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)5s - %(lineno)5d - %(funcName)33s - %(levelname)5s - %(message)s",
@@ -29,24 +15,43 @@ logging.basicConfig(
 app = FastAPI()
 
 
-app.frontend("/", directory="static", fallback="index.html")
-
-@app.post("/evaluate")
-def evaluate_resume_to_json(pdf_path: str , q: str | None = None):
-
-    resume_data = None
-    score = 0
-    logger.debug(
-            f"Extracting data from PDF"
-        )
+# Fonction métier : prend un chemin, inchangée ──────────────────────
+def evaluate_resume_to_json(pdf_path: str, q: str | None = None):
+    logger.debug("Extracting data from PDF")
     pdf_handler = PDFHandler()
     resume_data = pdf_handler.extract_json_from_pdf(pdf_path)
-
-    if resume_data == None:
+    if resume_data is None:
         return None
-    return {score}
+    profiles = []
+    if hasattr(resume_data, "basics") and resume_data.basics:
+        profiles = resume_data.basics.profiles or []
+    github_data = {}
+    github_profile = find_profile(profiles, "Github")
+    if github_profile and github_profile.url:
+        github_data = fetch_and_display_github_info(github_profile.url)
+    score = _evaluate_resume(resume_data, github_data)
+    return {"score": score}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
+# Route POST : reçoit le fichier, écrit un temp, appelle la fonction ──
+@app.post("/evaluate")
+def evaluate(file: UploadFile = File(...), secteur: str = Form(None)):
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=422, detail="Seuls les PDF sont acceptés")
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(file.file.read())
+        tmp_path = tmp.name
+
+    try:
+        result = evaluate_resume_to_json(tmp_path, secteur)
+    finally:
+        os.remove(tmp_path)
+
+    if result is None:
+        raise HTTPException(status_code=422, detail="CV illisible")
+    return result
+
+
+# Frontend Vue sur "/" 
+app.frontend("/", directory="static", fallback="index.html")
